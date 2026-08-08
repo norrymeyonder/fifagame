@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GL SPORTS FIFA 2022 - Ultimate Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;800;900&family=Cinzel:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        /* CSS Reset & Core */
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+        body {
+            background-color: #000; display: flex; justify-content: center; align-items: center;
+            height: 100vh; font-family: 'Montserrat', sans-serif; overflow: hidden; color: #fff; margin: 0;
+            touch-action: manipulation;
+        }
+
+        #game-container {
+            position: relative; width: 100vw; height: 56.25vw; max-height: 100vh; max-width: 177.77vh; 
+            background-color: #000; overflow: hidden; box-shadow: 0 0 5vw rgba(0,0,0,1);
+        }
+
+        .scanlines {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 90;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%);
+            background-size: 100% 4px; pointer-events: none; opacity: 0.4;
+        }
+        .ui-grid {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1;
+            background-image: linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 4vw 4vw; pointer-events: none; opacity: 0.5;
+        }
+        .vignette {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 85;
+            background: radial-gradient(circle at center, transparent 20%, rgba(0,0,0,0.9) 100%);
+            pointer-events: none;
+        }
+
+        /* Intro Screens */
+        #launch-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #000; z-index: 99999; display: flex; justify-content: center; align-items: center;
+            color: #00ff73; font-size: 1.5vw; letter-spacing: 6px; cursor: pointer; text-shadow: 0 0 20px rgba(0,255,115,0.5);
+        }
+        .launch-text { animation: pulseText 1s infinite alternate; font-weight: 900; }
+
+        .screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 0; visibility: hidden; z-index: 10;
+            transition: opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1), visibility 0.6s;
+        }
+        .screen.active { opacity: 1; visibility: visible; z-index: 40; }
+
+        #disclaimer-screen { background-color: #000; text-align: center; }
+        .disclaimer-content { max-width: 80%; transform: scale(0.95); transition: transform 4s linear; }
+        .screen.active .disclaimer-content { transform: scale(1); }
+        .disclaimer-content h1 { font-size: 2vw; letter-spacing: 3px; margin-bottom: 1.5vw; color: #d11241; }
+        .disclaimer-content p { font-size: 1.2vw; line-height: 1.8; color: rgba(255, 255, 255, 0.7); }
+
+        #nexus-screen { background-color: #000; }
+        .nexus-logo {
+            font-family: 'Cinzel', serif; font-size: 6vw; font-weight: 700; letter-spacing: 15px; text-shadow: 0 0 40px rgba(255,255,255,0.3);
+            transform: scale(0.9); transition: transform 3s ease-out;
+        }
+        .nexus-logo span { color: #00a8ff; font-weight: 600; font-size: 2.5vw; letter-spacing: 8px; display: block; margin-top: -10px; }
+        .screen.active .nexus-logo { transform: scale(1.05); }
+
+        #ea-screen { background-color: #fff; }
+        .ea-logo { max-width: 35%; transform: scale(0.8); transition: transform 3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .screen.active .ea-logo { transform: scale(1); }
+
+        #fifa-splash-screen { background-color: #000; }
+        .fifa-splash-logo { 
+            height: 18vw; transform: scale(0.5) translateY(5vw) rotateX(20deg); opacity: 0; 
+            transition: transform 2.5s cubic-bezier(0.1, 1, 0.2, 1), opacity 1.5s ease, filter 2.5s ease; 
+        }
+        .screen.active .fifa-splash-logo { 
+            transform: scale(1) translateY(0) rotateX(0deg); opacity: 1; 
+            filter: drop-shadow(0 0 40px rgba(255, 255, 255, 0.4)); 
+            animation: splashPulse 3s infinite alternate ease-in-out 1s;
+        }
+        @keyframes splashPulse {
+            0% { filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.2)); transform: scale(1); }
+            100% { filter: drop-shadow(0 0 60px rgba(255, 255, 255, 0.7)); transform: scale(1.05) translateY(-1vw); }
+        }
+
+        #start-screen { 
+            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1518605368461-1e1e1fd51ed4?q=80&w=2074&auto=format&fit=crop') center/cover; 
+            z-index: 20; cursor: pointer;
+        }
+        .game-title {
+            font-size: 7vw; font-weight: 900; letter-spacing: -2px; font-style: italic; text-shadow: 0 10px 40px rgba(0, 255, 115, 0.4); margin-bottom: 3vw; color: #fff;
+            transform: translateY(-20px); opacity: 0; transition: opacity 1s ease 0.5s, transform 1s ease 0.5s;
+        }
+        .game-title span { color: #00ff73; } 
+        .screen.active .game-title { transform: translateY(0); opacity: 1; }
+        .press-start { font-size: 1.5vw; letter-spacing: 4px; font-weight: 600; animation: pulseTextStart 1.5s infinite alternate; background: rgba(0,0,0,0.6); padding: 1vw 3vw; border-radius: 3vw; border: 1px solid rgba(0,255,115,0.4); backdrop-filter: blur(10px); }
+        
+        @keyframes pulseText { 0% { opacity: 0.6; text-shadow: 0 0 10px rgba(0,255,115,0.2); } 100% { opacity: 1; text-shadow: 0 0 30px rgba(0,255,115,1); } }
+        @keyframes pulseTextStart { 0% { opacity: 0.5; box-shadow: 0 0 0 rgba(0,255,115,0); } 100% { opacity: 1; box-shadow: 0 0 25px rgba(0,255,115,0.6); } }
+
+        .flash-effect {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #fff; z-index: 99; opacity: 0; pointer-events: none; transition: opacity 0.6s ease-out;
+        }
+        .flash-active { opacity: 1 !important; }
+
+        /* ================= MAIN UI ================= */
+        #main-ui {
+            background: linear-gradient(to top, rgba(0,0,0,1) 5%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.9) 100%);
+            display: flex; flex-direction: column; justify-content: space-between; padding: 2.5vw 4vw; z-index: 30;
+        }
+
+        .dynamic-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -2;
+            background: url('https://mir-s3-cdn-cf.behance.net/project_modules/hd/7ae121151890527.6314651d9cbe3.jpg') center/cover;
+            animation: breatheBg 25s infinite alternate ease-in-out;
+        }
+        @keyframes breatheBg { 0% { transform: scale(1); filter: brightness(1); } 100% { transform: scale(1.08); filter: brightness(0.85); } }
+        
+        .messi-character {
+            position: absolute; right: 2vw; bottom: 4vw; height: 38vw; z-index: 5;
+            pointer-events: none; filter: drop-shadow(-1vw 1vw 2vw rgba(0,0,0,0.8));
+            animation: floatMessi 4s ease-in-out infinite alternate;
+        }
+        @keyframes floatMessi { 0% { transform: translateY(0); } 100% { transform: translateY(-1.5vw); } }
+
+        .top-bar { width: 100%; display: flex; justify-content: space-between; align-items: flex-start; z-index: 10; }
+        .brand-title { display: flex; align-items: center; gap: 1.5vw; }
+        .fifa-official-logo { height: 7.5vw; filter: drop-shadow(0 0.5vw 1vw rgba(0,0,0,0.9)); margin-bottom: 0.5vw; }
+        .menu-logo-container { display: flex; flex-direction: column; justify-content: center; }
+        .menu-logo { font-size: 2.2vw; font-weight: 900; font-style: italic; letter-spacing: -1px; text-shadow: 0 0.5vw 1vw rgba(0,0,0,0.8); line-height: 1.1; }
+        .menu-logo span { color: #00ff73; }
+        .dev-credit { font-size: 0.8vw; color: rgba(255,255,255,0.7); font-weight: 600; margin-top: 0.2vw; letter-spacing: 2px; }
+        .dev-credit span { color: #00ff73; text-shadow: 0 0 10px rgba(0,255,115,0.6); font-weight: 900; }
+
+        .user-profile {
+            display: flex; align-items: center; gap: 1vw; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.15); padding: 0.6vw 1.2vw; border-radius: 4vw; box-shadow: 0 1vw 2vw rgba(0,0,0,0.6);
+        }
+        .avatar { width: 2.5vw; height: 2.5vw; background: linear-gradient(135deg, #00ff73, #0055ff); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 900; font-size: 1.2vw; color: #000; box-shadow: 0 0 10px rgba(0,255,115,0.5); }
+        .user-details { display: flex; flex-direction: column; }
+        .user-name { font-size: 0.9vw; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; }
+        .user-stats { display: flex; gap: 0.8vw; font-size: 0.75vw; color: #ccc; font-weight: 700; margin-top: 0.1vw; }
+        .currency { display: flex; align-items: center; gap: 0.4vw; color: #fff; }
+        .coin-icon { width: 0.7vw; height: 0.7vw; background: #ffd700; border-radius: 50%; display: inline-block; box-shadow: 0 0 8px #ffd700; }
+
+        .sub-view {
+            display: none; gap: 1.2vw; width: 100%; height: 26vw; align-items: stretch; margin-top: auto; margin-bottom: 2vw; z-index: 10; perspective: 1000px;
+        }
+        .sub-view.active { display: flex; animation: slideIn 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+        
+        @keyframes slideIn { 0% { opacity: 0; transform: translateX(5vw); } 100% { opacity: 1; transform: translateX(0); } }
+
+        /* VIEW 1: GAME MODES */
+        .mode-card {
+            flex: 1; position: relative; overflow: hidden; border-radius: 1.5vw;
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer; filter: grayscale(80%) brightness(0.5);
+            transition: flex 0.6s cubic-bezier(0.25, 1, 0.5, 1), filter 0.6s ease, box-shadow 0.6s ease, transform 0.6s ease;
+            transform-style: preserve-3d;
+        }
+        .mode-card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover; background-position: center; opacity: 0.6; z-index: -2; transition: transform 0.8s ease;
+        }
+        .mode-card:nth-child(1)::before { background-image: url('https://images.unsplash.com/photo-1517466787929-bc90951d0974?q=80&w=800&auto=format&fit=crop'); }
+        .mode-card:nth-child(2)::before { background-image: url('https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&w=800&auto=format&fit=crop'); }
+        .mode-card:nth-child(3)::before { background-image: url('https://images.unsplash.com/photo-1508344928928-7165b67de128?q=80&w=800&auto=format&fit=crop'); }
+        .mode-card:nth-child(4)::before { background-image: url('https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?q=80&w=800&auto=format&fit=crop'); }
+
+        .mode-card::after {
+            content: ''; position: absolute; top: 0; left: -150%; width: 50%; height: 100%;
+            background: linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,0.4), rgba(255,255,255,0));
+            transform: skewX(-20deg); transition: 0s; z-index: -1;
+        }
+        .mode-card.focused::after { animation: shineSweep 1.2s ease-in-out forwards; }
+        @keyframes shineSweep { 0% { left: -150%; } 100% { left: 200%; } }
+
+        .card-content {
+            position: absolute; bottom: 0; left: 0; width: 100%; padding: 2vw;
+            background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 60%, transparent 100%);
+            display: flex; flex-direction: column; justify-content: flex-end; height: 100%;
+        }
+
+        .mode-title { font-size: 2vw; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; transform: rotate(-90deg) translateX(8vw); transform-origin: left bottom; white-space: nowrap; transition: 0.5s ease; color: #fff; display: flex; align-items: center; gap: 0.5vw; }
+        .mode-desc { font-size: 0.9vw; color: #ddd; opacity: 0; height: 0; overflow: hidden; transition: 0.4s ease; margin-top: 0.5vw; font-weight: 600; line-height: 1.4; max-width: 25vw; }
+        .live-badge { position: absolute; top: 1.5vw; right: 1.5vw; background: #e50914; color: #fff; font-size: 0.8vw; font-weight: 900; padding: 0.4vw 1vw; border-radius: 0.5vw; box-shadow: 0 0 15px rgba(229,9,20,0.9); animation: pulseBadge 1.5s infinite alternate; opacity: 0; letter-spacing: 1px; }
+
+        .mode-card.focused {
+            flex: 3; filter: grayscale(0%) brightness(1.1); 
+            border: 0.15vw solid #00ff73;
+            transform: scale(1.02) translateY(-0.5vw) translateZ(20px);
+            box-shadow: 0 2vw 4vw rgba(0, 0, 0, 0.9), 0 0 2vw rgba(0, 255, 115, 0.4), inset 0 0 2vw rgba(0, 255, 115, 0.2);
+        }
+        .mode-card.focused::before { transform: scale(1.05); opacity: 0.9; }
+        .mode-card.focused .mode-title { transform: rotate(0deg) translateX(0); font-size: 2.2vw; text-shadow: 0 0.5vw 1vw rgba(0,0,0,1); }
+        .mode-card.focused .mode-desc { opacity: 1; height: auto; margin-top: 0.5vw; text-shadow: 0 0.2vw 0.5vw rgba(0,0,0,1); }
+        .mode-card.focused .live-badge { opacity: 1; }
+
+        /* ================= VIEW 2: PREMIUM KICK OFF UI ================= */
+        #kickoff-view { flex-direction: column; justify-content: flex-start; height: 28vw; margin-bottom: 0; }
+        
+        .ko-layout { display: flex; width: 100%; height: 100%; align-items: center; justify-content: space-between; gap: 2vw; perspective: 1500px; }
+        
+        .ko-team-panel { 
+            flex: 1; height: 100%; border-radius: 1.5vw; padding: 1.5vw; display: flex; flex-direction: column; align-items: center; justify-content: space-evenly;
+            background: linear-gradient(145deg, rgba(30,30,30,0.7), rgba(0,0,0,0.9));
+            border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 1vw 3vw rgba(0,0,0,0.8), inset 0 0 2vw rgba(255,255,255,0.02);
+            backdrop-filter: blur(20px); transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); cursor: pointer; transform-style: preserve-3d;
+        }
+        
+        /* 3D Focus Effect */
+        #ko-panel-home.focused { transform: scale(1.05) rotateY(5deg) translateZ(30px); border-color: #00ff73; box-shadow: -1vw 1vw 3vw rgba(0,255,115,0.15), 0 0 2vw rgba(0,255,115,0.4), inset 0 0 1vw rgba(0,255,115,0.1); }
+        #ko-panel-away.focused { transform: scale(1.05) rotateY(-5deg) translateZ(30px); border-color: #00ff73; box-shadow: 1vw 1vw 3vw rgba(0,255,115,0.15), 0 0 2vw rgba(0,255,115,0.4), inset 0 0 1vw rgba(0,255,115,0.1); }
+        
+        .ko-label { font-size: 0.8vw; font-weight: 900; color: #888; background: rgba(0,0,0,0.8); padding: 0.3vw 1vw; border-radius: 2vw; border: 1px solid rgba(255,255,255,0.1); letter-spacing: 3px; margin-bottom: 0.5vw; transition: all 0.3s; }
+        .ko-team-panel.focused .ko-label { color: #000; background: #00ff73; border-color: #00ff73; box-shadow: 0 0 10px rgba(0,255,115,0.6); }
+        
+        .ko-selector { display: flex; align-items: center; justify-content: center; gap: 1.5vw; width: 100%; margin: 1vw 0; }
+        .ko-arrow { font-size: 2.5vw; font-weight: 900; color: rgba(255,255,255,0.2); transition: 0.2s; cursor: pointer; padding: 1vw; }
+        .ko-team-panel.focused .ko-arrow { color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.8); }
+        .ko-arrow:hover { color: #00ff73 !important; transform: scale(1.2); text-shadow: 0 0 20px rgba(0,255,115,1); }
+        
+        /* Premium Flag Styling (SVG Optimised) */
+        .ko-crest-container { width: 10vw; height: 6.5vw; display: flex; justify-content: center; align-items: center; perspective: 1000px; }
+        .ko-crest { width: 100%; height: 100%; object-fit: cover; border-radius: 0.5vw; border: 2px solid rgba(255,255,255,0.15); box-shadow: 0 1vw 2vw rgba(0,0,0,0.8); transition: all 0.4s ease; background-color: #fff; }
+        .ko-team-panel.focused .ko-crest { transform: scale(1.15) translateZ(40px); border-color: #00ff73; box-shadow: 0 0.5vw 2vw rgba(0,255,115,0.4); }
+        
+        .ko-team-name { font-size: 2.2vw; font-weight: 900; text-transform: uppercase; text-align: center; letter-spacing: 2px; color: #fff; text-shadow: 0 0.3vw 0.5vw rgba(0,0,0,0.9); margin-top: 0.5vw; }
+        .ko-stars { font-size: 1.2vw; color: #ffd700; margin-bottom: 1vw; letter-spacing: 3px; text-shadow: 0 0 10px rgba(255,215,0,0.6); }
+        
+        .ko-stats { width: 85%; display: flex; flex-direction: column; gap: 0.8vw; }
+        .ko-stat-row { display: flex; align-items: center; justify-content: space-between; font-size: 0.9vw; font-weight: 800; color: #ccc; }
+        .ko-stat-row span:first-child { width: 3.5vw; text-align: right; letter-spacing: 1px; color: #aaa; }
+        .ko-bar-bg { flex: 1; height: 0.6vw; background: rgba(0,0,0,0.8); border-radius: 1vw; margin: 0 1vw; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); box-shadow: inset 0 0 5px rgba(0,0,0,0.9); }
+        .ko-bar-fill { height: 100%; background: linear-gradient(90deg, #0055ff, #00ff73); width: 50%; transition: width 0.6s cubic-bezier(0.25, 1, 0.5, 1); border-radius: 1vw; box-shadow: 0 0 10px rgba(0,255,115,0.4); }
+        .ko-team-panel.focused .ko-stat-row span:first-child { color: #fff; }
+        .ko-stat-val { width: 2vw; text-align: left; color: #fff; font-weight: 900; text-shadow: 0 0 5px rgba(0,0,0,1); }
+        
+        .ko-center { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 0.6; height: 100%; }
+        .ko-match-type { font-size: 0.9vw; font-weight: 800; color: #ddd; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 2vw; background: rgba(0,0,0,0.6); padding: 0.6vw 1.5vw; border-radius: 3vw; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
+        .ko-vs { font-size: 4.5vw; font-weight: 900; font-style: italic; color: #00ff73; text-shadow: 0 0 40px rgba(0,255,115,0.8); margin-bottom: 2vw; line-height: 1; }
+        
+        .ko-start-btn { 
+            background: linear-gradient(135deg, rgba(0,0,0,0.8), rgba(20,20,20,0.9)); border: 2px solid rgba(255,255,255,0.2); 
+            padding: 1.2vw 3vw; border-radius: 4vw; font-size: 1.2vw; font-weight: 900; color: #aaa; cursor: pointer; transition: all 0.3s;
+            text-transform: uppercase; letter-spacing: 3px; backdrop-filter: blur(10px); box-shadow: 0 1vw 2vw rgba(0,0,0,0.6);
+        }
+        .ko-start-btn.focused { 
+            background: #00ff73; border-color: #00ff73; color: #000; 
+            box-shadow: 0 0 3vw rgba(0,255,115,0.8), inset 0 0 1vw rgba(255,255,255,0.5); 
+            transform: scale(1.15); text-shadow: none; animation: pulsePlay 1.5s infinite alternate;
+        }
+        @keyframes pulsePlay { 0% { box-shadow: 0 0 2vw rgba(0,255,115,0.5); } 100% { box-shadow: 0 0 4vw rgba(0,255,115,1); } }
+
+        /* VIEW 3: SETTINGS */
+        #settings-view { flex-direction: column; justify-content: center; }
+        .settings-header { font-size: 2vw; font-weight: 900; color: #fff; letter-spacing: 2px; margin-bottom: 1.5vw; text-transform: uppercase; display: flex; align-items: center; gap: 1vw; }
+        .settings-header span { color: #00ff73; text-shadow: 0 0 10px rgba(0,255,115,0.4); }
+        
+        .settings-list { display: flex; flex-direction: column; gap: 0.8vw; width: 60%; }
+        .setting-row {
+            display: flex; justify-content: space-between; align-items: center; padding: 1.2vw 2vw; border-radius: 0.8vw;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(15px);
+            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1); cursor: pointer;
+        }
+        .set-label { font-size: 1.2vw; font-weight: 700; color: #aaa; transition: color 0.3s; display: flex; align-items: center; gap: 1vw; pointer-events: none; }
+        .set-control { display: flex; align-items: center; gap: 1vw; width: 22vw; justify-content: flex-end; pointer-events: none; }
+        
+        .setting-row.focused {
+            background: linear-gradient(90deg, rgba(0,255,115,0.15), rgba(0,0,0,0.6));
+            border-left: 0.4vw solid #00ff73; border-top: 1px solid rgba(0,255,115,0.4); border-bottom: 1px solid rgba(0,255,115,0.4);
+            transform: translateX(1vw) scale(1.02); box-shadow: 0 1vw 2vw rgba(0,0,0,0.8), inset 5vw 0 5vw -5vw rgba(0,255,115,0.2);
+        }
+        .setting-row.focused .set-label { color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.3); }
+        .setting-row.focused .set-value { color: #00ff73; font-weight: 900; transform: scale(1.15); text-shadow: 0 0 10px rgba(0,255,115,0.5); }
+
+        .slider { width: 12vw; height: 0.8vw; background: rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.2); border-radius: 1vw; position: relative; overflow: hidden; }
+        .slider-fill { height: 100%; background: linear-gradient(90deg, #0055ff, #00ff73); transition: width 0.2s cubic-bezier(0.25, 1, 0.5, 1); border-radius: 1vw; }
+        .set-value { font-size: 1.2vw; font-weight: 800; width: 4.5vw; text-align: right; transition: all 0.2s; color: #ddd; }
+        .toggle-status { font-size: 1.2vw; font-weight: 900; width: 4vw; text-align: right; }
+        .toggle-off { color: #888; }
+        .toggle-on { color: #00ff73; text-shadow: 0 0 15px rgba(0,255,115,0.8); }
+
+        /* Footer */
+        .footer-section { width: 100%; display: flex; flex-direction: column; gap: 1vw; z-index: 10; }
+        .bottom-controls { display: flex; gap: 2vw; font-size: 0.9vw; font-weight: 800; color: #ccc; align-items: center; text-transform: uppercase; }
+        .control-btn { display: flex; align-items: center; gap: 0.6vw; cursor: pointer; }
+        .btn-icon { 
+            background: linear-gradient(180deg, #f0f0f0, #c0c0c0); color: #000; padding: 0.3vw 0.8vw; 
+            border-radius: 0.4vw; font-weight: 900; font-size: 0.8vw; border-bottom: 0.2vw solid #888;
+            box-shadow: 0 0.3vw 0.5vw rgba(0,0,0,0.8); text-transform: uppercase; 
+        }
+
+        .news-ticker {
+            width: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); border-top: 1px solid rgba(255,255,255,0.1); border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex; align-items: center; padding: 0.5vw 1vw; font-size: 0.85vw; overflow: hidden;
+        }
+        .news-label { display: flex; align-items: center; gap: 0.5vw; color: #fff; font-weight: 900; padding-right: 1vw; border-right: 2px solid rgba(255,255,255,0.2); margin-right: 1vw; white-space: nowrap; }
+        .live-dot { width: 0.6vw; height: 0.6vw; background: #e50914; border-radius: 50%; box-shadow: 0 0 10px #e50914; animation: blink 1s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        
+        .marquee { flex-grow: 1; overflow: hidden; white-space: nowrap; color: #00ff73; font-weight: 700; text-shadow: 0 0 5px rgba(0,255,115,0.3); }
+        .marquee span { display: inline-block; animation: scrollNews 30s linear infinite; }
+        @keyframes scrollNews { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+    </style>
+</head>
+<body>
+
+    <audio id="bg-music" src="https://norrymeyonder.github.io/fifagame/main.m4a" loop preload="auto"></audio>
+
+    <div id="game-container">
+        
+        <div class="ui-grid"></div>
+        <div class="scanlines"></div>
+        <div class="vignette"></div>
+
+        <div id="launch-screen"><div class="launch-text">CLICK ANYWHERE TO LAUNCH GL SPORTS</div></div>
+        <div class="flash-effect" id="flash"></div>
+
+        <div class="screen" id="disclaimer-screen"><div class="disclaimer-content"><h1>OFFICIAL LICENSED PRODUCT</h1><p>© GL SPORTS Inc. GL, GL SPORTS, and the GL SPORTS logo are trademarks of GL SPORTS Inc.</p></div></div>
+        <div class="screen" id="nexus-screen"><div class="nexus-logo">NEXUS<span>STUDIOS</span></div></div>
+        <div class="screen" id="ea-screen"><img src="https://norrymeyonder.github.io/fifagame/ea.png" alt="EA Sports Logo" class="ea-logo"></div>
+        
+        <div class="screen" id="fifa-splash-screen"><img src="https://norrymeyonder.github.io/fifagame/fifa_logo.png" alt="FIFA Logo Splash" class="fifa-splash-logo"></div>
+
+        <div class="screen" id="start-screen">
+            <div class="game-title">GL SPORTS <span>FIFA 2022</span></div>
+            <div class="press-start">PRESS SPACE OR TAP TO START</div>
+        </div>
+
+        <div class="screen" id="main-ui">
+            <div class="dynamic-bg"></div>
+            <img src="https://norrymeyonder.github.io/fifagame/messi.png" alt="Lionel Messi" class="messi-character">
+
+            <div class="top-bar">
+                <div class="brand-title">
+                    <img src="https://norrymeyonder.github.io/fifagame/fifa_logo.png" alt="FIFA Logo" class="fifa-official-logo">
+                    <div class="menu-logo-container">
+                        <div class="menu-logo">GL SPORTS <span>FIFA 2022</span></div>
+                        <div class="dev-credit">Developer - <span>GOURAB LAYAK</span></div>
+                    </div>
+                </div>
+                <div class="user-profile">
+                    <div class="avatar">G</div>
+                    <div class="user-details"><div class="user-name">GOURAB</div><div class="user-stats"><span>Level 42</span> | <span class="currency"><span class="coin-icon"></span> 15,400</span></div></div>
+                </div>
+            </div>
+
+            <!-- MODES VIEW -->
+            <div class="sub-view active" id="modes-container">
+                <div class="mode-card focused"><div class="card-content"><div class="mode-title">⚽ Kick Off</div><div class="mode-desc">Jump straight into the action. Play local matches with friends or AI in various tournaments.</div></div></div>
+                <div class="mode-card"><div class="live-badge">LIVE EVENT</div><div class="card-content"><div class="mode-title">🏆 Ultimate Team</div><div class="mode-desc">Build your dream squad, open packs, and compete globally.</div></div></div>
+                <div class="mode-card"><div class="card-content"><div class="mode-title">👔 Career Mode</div><div class="mode-desc">Live your football dreams. Manage a top club to glory.</div></div></div>
+                <div class="mode-card"><div class="card-content"><div class="mode-title">⚙️ Settings & Edit</div><div class="mode-desc">Customize controls, adjust audio levels, and manage game settings.</div></div></div>
+            </div>
+
+            <!-- PREMIUM KICK OFF UI -->
+            <div class="sub-view" id="kickoff-view">
+                <div class="ko-layout">
+                    <!-- Home Team -->
+                    <div class="ko-team-panel focused" id="ko-panel-home">
+                        <div class="ko-label">HOME TEAM</div>
+                        <div class="ko-selector">
+                            <div class="ko-arrow" id="ko-home-prev">◀</div>
+                            <div class="ko-crest-container"><img src="" id="ko-home-logo" class="ko-crest"></div>
+                            <div class="ko-arrow" id="ko-home-next">▶</div>
+                        </div>
+                        <div class="ko-team-name" id="ko-home-name">Team</div>
+                        <div class="ko-stars" id="ko-home-stars">★★★★★</div>
+                        <div class="ko-stats">
+                            <div class="ko-stat-row"><span>ATT</span><div class="ko-bar-bg"><div class="ko-bar-fill" id="ko-home-att"></div></div><span class="ko-stat-val" id="ko-home-att-val">90</span></div>
+                            <div class="ko-stat-row"><span>MID</span><div class="ko-bar-bg"><div class="ko-bar-fill" id="ko-home-mid"></div></div><span class="ko-stat-val" id="ko-home-mid-val">90</span></div>
+                            <div class="ko-stat-row"><span>DEF</span><div class="ko-bar-bg"><div class="ko-bar-fill" id="ko-home-def"></div></div><span class="ko-stat-val" id="ko-home-def-val">90</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Center Area -->
+                    <div class="ko-center">
+                        <div class="ko-match-type">International Friendly</div>
+                        <div class="ko-vs">VS</div>
+                        <div class="ko-start-btn" id="ko-start-btn">PLAY MATCH</div>
+                    </div>
+
+                    <!-- Away Team -->
+                    <div class="ko-team-panel" id="ko-panel-away">
+                        <div class="ko-label">AWAY TEAM</div>
+                        <div class="ko-selector">
+                            <div class="ko-arrow" id="ko-away-prev">◀</div>
+                            <div class="ko-crest-container"><img src="" id="ko-away-logo" class="ko-crest"></div>
+                            <div class="ko-arrow" id="ko-away-next">▶</div>
+                        </div>
+                        <div class="ko-team-name" id="ko-away-name">Team</div>
+                        <div class="ko-stars" id="ko-away-stars">★★★★★</div>
+                        <div class="ko-stats">
+                            <div class="ko-stat-row"><span>ATT</span><div class="ko-bar-bg"><div class="ko-bar-fill" id="ko-away-att"></div></div><span class="ko-stat-val" id="ko-away-att-val">90</span></div>
+                            <div class="ko-stat-row"><span>MID</span><div class="ko-bar-bg"><div class="ko-bar-fill" id="ko-away-mid"></div></div><span class="ko-stat-val" id="ko-away-mid-val">90</span></div>
+                            <div class="ko-stat-row"><span>DEF</span><div class="ko-bar-bg"><div class="ko-bar-fill" id="ko-away-def"></div></div><span class="ko-stat-val" id="ko-away-def-val">90</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SETTINGS VIEW -->
+            <div class="sub-view" id="settings-view">
+                <div class="settings-header">⚙️ Audio <span>Settings</span></div>
+                <div class="settings-list">
+                    <div class="setting-row focused" data-type="slider"><div class="set-label">🎧 Background Music Volume</div><div class="set-control"><div class="slider"><div class="slider-fill" id="ui-bgm-fill" style="width: 50%;"></div></div><div class="set-value" id="ui-bgm-val">50%</div></div></div>
+                    <div class="setting-row" data-type="slider"><div class="set-label">🔊 Navigation SFX Volume</div><div class="set-control"><div class="slider"><div class="slider-fill" id="ui-sfx-fill" style="width: 100%;"></div></div><div class="set-value" id="ui-sfx-val">200%</div></div></div>
+                    <div class="setting-row" data-type="toggle"><div class="set-label">🔇 Mute Background Music</div><div class="set-control"><div class="toggle-status toggle-off" id="ui-bgm-mute">OFF</div></div></div>
+                    <div class="setting-row" data-type="toggle"><div class="set-label">🔕 Mute Navigation SFX</div><div class="set-control"><div class="toggle-status toggle-off" id="ui-sfx-mute">OFF</div></div></div>
+                </div>
+            </div>
+
+            <div class="footer-section">
+                <div class="bottom-controls">
+                    <div class="control-btn"><span class="btn-icon">ENTER</span> Select / Play</div>
+                    <div class="control-btn"><span class="btn-icon">◀ ▶</span> Change</div>
+                    <div class="control-btn"><span class="btn-icon">▲ ▼</span> Focus</div>
+                    <div class="control-btn" id="btn-back"><span class="btn-icon">BACKSPACE</span> Back</div>
+                    <div style="margin-left: auto; font-size: 0.8vw; color: rgba(255,255,255,0.7);">Server: <span style="color:#00ff73;">CONNECTED</span> (Ping: 12ms)</div>
+                </div>
+                <div class="news-ticker">
+                    <div class="news-label"><div class="live-dot"></div> GL NETWORK</div>
+                    <div class="marquee"><span>BREAKING: New Season 4 Objectives are now live in Ultimate Team! Complete challenges to unlock exclusive ICON players. ••• Title Update #3 is now available, tuning gameplay and updating player star heads. ••• Participate in the Weekend League to earn premium rewards!</span></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const launchScreen = document.getElementById("launch-screen");
+            const startScreen = document.getElementById("start-screen");
+            const mainUi = document.getElementById("main-ui");
+            const modesContainer = document.getElementById("modes-container");
+            const kickoffView = document.getElementById("kickoff-view");
+            const settingsView = document.getElementById("settings-view");
+            const flash = document.getElementById("flash");
+            const bgMusic = document.getElementById("bg-music");
+
+            let isStartScreenActive = false;
+            let isMainUiActive = false;
+            let currentView = "modes"; 
+            let audioCtx;
+
+            let bgmVolume = 50; 
+            let sfxVolume = 200; 
+            let bgmMuted = false;
+            let sfxMuted = false;
+
+            // --- 100% WORKING FLAGS (Cloudflare CDNJS - SVG) ---
+            const teamsData = [
+                { name: "Argentina", logo: "https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/4.1.4/flags/4x3/ar.svg", att: 89, mid: 84, def: 82, stars: 5 },
+                { name: "Portugal", logo: "https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/4.1.4/flags/4x3/pt.svg", att: 87, mid: 83, def: 84, stars: 5 },
+                { name: "France", logo: "https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/4.1.4/flags/4x3/fr.svg", att: 88, mid: 86, def: 85, stars: 5 },
+                { name: "Brazil", logo: "https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/4.1.4/flags/4x3/br.svg", att: 89, mid: 85, def: 83, stars: 5 },
+                { name: "England", logo: "https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/4.1.4/flags/4x3/gb-eng.svg", att: 86, mid: 85, def: 84, stars: 5 },
+                { name: "Spain", logo: "https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/4.1.4/flags/4x3/es.svg", att: 84, mid: 87, def: 85, stars: 5 },
+                { name: "Germany", logo: "https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/4.1.4/flags/4x3/de.svg", att: 84, mid: 86, def: 83, stars: 4.5 },
+                { name: "Italy", logo: "https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/4.1.4/flags/4x3/it.svg", att: 83, mid: 84, def: 86, stars: 4.5 },
+                { name: "Netherlands", logo: "https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/4.1.4/flags/4x3/nl.svg", att: 85, mid: 83, def: 84, stars: 4.5 },
+                { name: "Belgium", logo: "https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/4.1.4/flags/4x3/be.svg", att: 84, mid: 85, def: 82, stars: 4.5 }
+            ];
+
+            let koFocusState = 'home'; // 'home', 'start', 'away'
+            let homeIdx = 0; // Argentina
+            let awayIdx = 1; // Portugal
+
+            function getStarsHTML(stars) {
+                let full = Math.floor(stars);
+                let half = (stars % 1 !== 0);
+                return '★'.repeat(full) + (half ? '½' : '');
+            }
+
+            function renderKickoff() {
+                const home = teamsData[homeIdx];
+                const away = teamsData[awayIdx];
+
+                document.getElementById('ko-home-logo').src = home.logo;
+                document.getElementById('ko-home-name').innerText = home.name;
+                document.getElementById('ko-home-stars').innerText = getStarsHTML(home.stars);
+                document.getElementById('ko-home-att').style.width = home.att + '%';
+                document.getElementById('ko-home-att-val').innerText = home.att;
+                document.getElementById('ko-home-mid').style.width = home.mid + '%';
+                document.getElementById('ko-home-mid-val').innerText = home.mid;
+                document.getElementById('ko-home-def').style.width = home.def + '%';
+                document.getElementById('ko-home-def-val').innerText = home.def;
+
+                document.getElementById('ko-away-logo').src = away.logo;
+                document.getElementById('ko-away-name').innerText = away.name;
+                document.getElementById('ko-away-stars').innerText = getStarsHTML(away.stars);
+                document.getElementById('ko-away-att').style.width = away.att + '%';
+                document.getElementById('ko-away-att-val').innerText = away.att;
+                document.getElementById('ko-away-mid').style.width = away.mid + '%';
+                document.getElementById('ko-away-mid-val').innerText = away.mid;
+                document.getElementById('ko-away-def').style.width = away.def + '%';
+                document.getElementById('ko-away-def-val').innerText = away.def;
+            }
+
+            function updateKoFocus() {
+                document.getElementById('ko-panel-home').classList.remove('focused');
+                document.getElementById('ko-panel-away').classList.remove('focused');
+                document.getElementById('ko-start-btn').classList.remove('focused');
+
+                if(koFocusState === 'home') document.getElementById('ko-panel-home').classList.add('focused');
+                else if(koFocusState === 'away') document.getElementById('ko-panel-away').classList.add('focused');
+                else if(koFocusState === 'start') document.getElementById('ko-start-btn').classList.add('focused');
+            }
+
+            function changeTeam(dir) {
+                if(koFocusState === 'home') homeIdx = (homeIdx + dir + teamsData.length) % teamsData.length;
+                else if (koFocusState === 'away') awayIdx = (awayIdx + dir + teamsData.length) % teamsData.length;
+                renderKickoff();
+                playNavSound();
+            }
+
+            // Audio Functions
+            function applyAudioSettings() { bgMusic.volume = bgmMuted ? 0 : (bgmVolume / 100); }
+            function initAudioContext() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+            function playNavSound() {
+                if (!audioCtx || sfxMuted || sfxVolume === 0) return;
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.08);
+                gainNode.gain.setValueAtTime(0.15 * (sfxVolume / 100), audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+                osc.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.08);
+            }
+
+            function openFullscreen() {
+                let elem = document.documentElement; 
+                if (elem.requestFullscreen) elem.requestFullscreen().catch(err=>console.log(err));
+                else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+            }
+
+            launchScreen.addEventListener("click", () => {
+                openFullscreen(); initAudioContext(); applyAudioSettings(); 
+                bgMusic.play().catch(e=>console.log(e));
+                launchScreen.style.opacity = "0";
+                setTimeout(() => { launchScreen.style.display = "none"; }, 600);
+
+                setTimeout(() => { document.getElementById("disclaimer-screen").classList.add("active"); }, 500); 
+                setTimeout(() => { document.getElementById("disclaimer-screen").classList.remove("active"); }, 3500); 
+                setTimeout(() => { document.getElementById("nexus-screen").classList.add("active"); }, 4000); 
+                setTimeout(() => { document.getElementById("nexus-screen").classList.remove("active"); }, 6500); 
+                setTimeout(() => { document.getElementById("ea-screen").classList.add("active"); }, 7000); 
+                setTimeout(() => { document.getElementById("ea-screen").classList.remove("active"); }, 9500); 
+                setTimeout(() => { document.getElementById("fifa-splash-screen").classList.add("active"); }, 10000); 
+                setTimeout(() => { document.getElementById("fifa-splash-screen").classList.remove("active"); }, 13000); 
+                setTimeout(() => { startScreen.classList.add("active"); isStartScreenActive = true; renderKickoff(); }, 14000);
+            });
+
+            function triggerStartSequence() {
+                if (!isStartScreenActive) return;
+                isStartScreenActive = false; flash.classList.add("flash-active"); playNavSound();
+                setTimeout(() => {
+                    startScreen.classList.remove("active"); mainUi.classList.add("active");
+                    isMainUiActive = true; setTimeout(() => { flash.classList.remove("flash-active"); }, 400);
+                }, 500);
+            }
+
+            // MODES logic
+            const modeCards = document.querySelectorAll('.mode-card');
+            let selectedIndex = 0; 
+            function updateMainFocus() { modeCards.forEach(c => c.classList.remove('focused')); modeCards[selectedIndex].classList.add('focused'); }
+
+            modeCards.forEach((card, index) => {
+                card.addEventListener("click", () => {
+                    if (selectedIndex === index) handleEnterAction();
+                    else { selectedIndex = index; updateMainFocus(); playNavSound(); }
+                });
+            });
+
+            // KICKOFF Touch Logic
+            document.getElementById('ko-panel-home').addEventListener('click', () => { koFocusState = 'home'; updateKoFocus(); playNavSound(); });
+            document.getElementById('ko-panel-away').addEventListener('click', () => { koFocusState = 'away'; updateKoFocus(); playNavSound(); });
+            document.getElementById('ko-start-btn').addEventListener('click', () => { playNavSound(); alert(`Match Starting: ${teamsData[homeIdx].name} VS ${teamsData[awayIdx].name}!`); });
+
+            document.getElementById('ko-home-prev').addEventListener('click', (e) => { e.stopPropagation(); koFocusState = 'home'; updateKoFocus(); changeTeam(-1); });
+            document.getElementById('ko-home-next').addEventListener('click', (e) => { e.stopPropagation(); koFocusState = 'home'; updateKoFocus(); changeTeam(1); });
+            document.getElementById('ko-away-prev').addEventListener('click', (e) => { e.stopPropagation(); koFocusState = 'away'; updateKoFocus(); changeTeam(-1); });
+            document.getElementById('ko-away-next').addEventListener('click', (e) => { e.stopPropagation(); koFocusState = 'away'; updateKoFocus(); changeTeam(1); });
+
+
+            // SETTINGS Logic
+            const setRows = document.querySelectorAll('.setting-row');
+            let setIndex = 0;
+            function updateSettingsFocus() { setRows.forEach(r => r.classList.remove('focused')); setRows[setIndex].classList.add('focused'); }
+
+            setRows.forEach((row, index) => {
+                row.addEventListener("click", (e) => {
+                    if (setIndex !== index) { setIndex = index; updateSettingsFocus(); playNavSound(); }
+                    else {
+                        const type = row.getAttribute("data-type");
+                        if (type === "toggle") handleEnterAction();
+                        else if (type === "slider") {
+                            const rect = row.getBoundingClientRect(); const clickX = e.clientX - rect.left;
+                            if (clickX > rect.width / 2) {
+                                if (setIndex === 0 && bgmVolume < 100) { bgmVolume += 10; updateSettingsUI(); applyAudioSettings(); playNavSound(); }
+                                else if (setIndex === 1 && sfxVolume < 200) { sfxVolume += 10; updateSettingsUI(); playNavSound(); }
+                            } else {
+                                if (setIndex === 0 && bgmVolume > 0) { bgmVolume -= 10; updateSettingsUI(); applyAudioSettings(); playNavSound(); }
+                                else if (setIndex === 1 && sfxVolume > 0) { sfxVolume -= 10; updateSettingsUI(); playNavSound(); }
+                            }
+                        }
+                    }
+                });
+            });
+
+            function updateSettingsUI() {
+                document.getElementById('ui-bgm-fill').style.width = bgmVolume + '%'; document.getElementById('ui-bgm-val').innerText = bgmVolume + '%';
+                document.getElementById('ui-sfx-fill').style.width = (sfxVolume / 2) + '%'; document.getElementById('ui-sfx-val').innerText = sfxVolume + '%';
+                document.getElementById('ui-bgm-mute').innerText = bgmMuted ? "ON" : "OFF"; document.getElementById('ui-bgm-mute').className = bgmMuted ? "toggle-status toggle-on" : "toggle-status toggle-off";
+                document.getElementById('ui-sfx-mute').innerText = sfxMuted ? "ON" : "OFF"; document.getElementById('ui-sfx-mute').className = sfxMuted ? "toggle-status toggle-on" : "toggle-status toggle-off";
+            }
+
+            function handleEnterAction() {
+                if (!isMainUiActive) return;
+                playNavSound();
+                if (currentView === "modes") {
+                    if (selectedIndex === 0) {
+                        modesContainer.classList.remove("active"); kickoffView.classList.add("active");
+                        currentView = "kickoff"; koFocusState = 'home'; updateKoFocus();
+                    } else if (selectedIndex === 3) {
+                        modesContainer.classList.remove("active"); settingsView.classList.add("active");
+                        currentView = "settings"; setIndex = 0; updateSettingsFocus();
+                    }
+                } else if (currentView === "kickoff") {
+                    if(koFocusState === 'start') alert(`Match Starting: ${teamsData[homeIdx].name} VS ${teamsData[awayIdx].name}!`);
+                    else { koFocusState = 'start'; updateKoFocus(); }
+                } else if (currentView === "settings") {
+                    if (setIndex === 2) { bgmMuted = !bgmMuted; updateSettingsUI(); applyAudioSettings(); }
+                    else if (setIndex === 3) { sfxMuted = !sfxMuted; updateSettingsUI(); }
+                }
+            }
+
+            function handleBackAction() {
+                if (!isMainUiActive) return;
+                if (currentView !== "modes") {
+                    kickoffView.classList.remove("active"); settingsView.classList.remove("active");
+                    modesContainer.classList.add("active"); currentView = "modes"; playNavSound();
+                }
+            }
+
+            startScreen.addEventListener("click", triggerStartSequence);
+            const btnBack = document.getElementById("btn-back");
+            if(btnBack) btnBack.addEventListener("click", handleBackAction);
+
+            document.addEventListener("keydown", (e) => {
+                if (isStartScreenActive && (e.code === "Space" || e.code === "Enter")) { triggerStartSequence(); return; }
+                if (isMainUiActive) {
+                    if (e.code === 'Enter' || e.code === 'Space') { handleEnterAction(); return; }
+                    if (e.code === 'Backspace') { handleBackAction(); return; }
+
+                    if (currentView === "modes") {
+                        if (e.code === 'ArrowRight' && selectedIndex < modeCards.length - 1) { selectedIndex++; updateMainFocus(); playNavSound(); } 
+                        else if (e.code === 'ArrowLeft' && selectedIndex > 0) { selectedIndex--; updateMainFocus(); playNavSound(); }
+                    }
+                    else if (currentView === "kickoff") {
+                        if (e.code === 'ArrowDown') {
+                            if(koFocusState === 'home') koFocusState = 'start';
+                            else if(koFocusState === 'start') koFocusState = 'away';
+                            else koFocusState = 'home';
+                            updateKoFocus(); playNavSound();
+                        } else if (e.code === 'ArrowUp') {
+                            if(koFocusState === 'home') koFocusState = 'away';
+                            else if(koFocusState === 'away') koFocusState = 'start';
+                            else koFocusState = 'home';
+                            updateKoFocus(); playNavSound();
+                        } else if (e.code === 'ArrowLeft') {
+                            if(koFocusState === 'home' || koFocusState === 'away') changeTeam(-1);
+                        } else if (e.code === 'ArrowRight') {
+                            if(koFocusState === 'home' || koFocusState === 'away') changeTeam(1);
+                        }
+                    }
+                    else if (currentView === "settings") {
+                        if (e.code === 'ArrowDown' && setIndex < setRows.length - 1) { setIndex++; updateSettingsFocus(); playNavSound(); } 
+                        else if (e.code === 'ArrowUp' && setIndex > 0) { setIndex--; updateSettingsFocus(); playNavSound(); } 
+                        else if (e.code === 'ArrowLeft') {
+                            if (setIndex === 0 && bgmVolume > 0) { bgmVolume -= 10; updateSettingsUI(); applyAudioSettings(); playNavSound(); }
+                            else if (setIndex === 1 && sfxVolume > 0) { sfxVolume -= 10; updateSettingsUI(); playNavSound(); }
+                        } else if (e.code === 'ArrowRight') {
+                            if (setIndex === 0 && bgmVolume < 100) { bgmVolume += 10; updateSettingsUI(); applyAudioSettings(); playNavSound(); }
+                            else if (setIndex === 1 && sfxVolume < 200) { sfxVolume += 10; updateSettingsUI(); playNavSound(); } 
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
