@@ -53,7 +53,7 @@
         }
         #final-black-screen.active { opacity: 1; pointer-events: all; }
 
-        /* ================= 1. STADIUM SHOWCASE (NEW FOOTBALL IMAGES) ================= */
+        /* ================= 1. STADIUM SHOWCASE ================= */
         #stadium-view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; }
         
         .stadium-cam {
@@ -63,7 +63,7 @@
             transition: opacity 0.5s ease-in-out;
         }
         
-        /* New Authentic Football Stadium Images */
+        /* Authentic Football Stadium Images */
         #cam-1 { background-image: url('https://images.unsplash.com/photo-1577223625816-7546f13df25d?q=80&w=2000&auto=format&fit=crop'); }
         #cam-2 { background-image: url('https://images.unsplash.com/photo-1589487391730-58f20eb2c308?q=80&w=2000&auto=format&fit=crop'); }
         #cam-3 { background-image: url('https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=2000&auto=format&fit=crop'); }
@@ -149,7 +149,6 @@
             position: absolute; width: 45vw; height: 45vw; opacity: 0.15; 
             filter: grayscale(100%) brightness(2); z-index: 1; pointer-events: none;
         }
-        /* Added infinite alternate animations for watermarks */
         .home-side .bg-watermark { left: -8vw; top: -5vw; transform: rotate(-10deg); animation: floatWatermarkHome 12s infinite alternate ease-in-out; }
         .away-side .bg-watermark { right: -8vw; bottom: -5vw; transform: rotate(10deg); animation: floatWatermarkAway 12s infinite alternate ease-in-out; }
 
@@ -161,16 +160,15 @@
         .home-side .team-content { transform: translateX(-4vw); } 
         .away-side .team-content { transform: translateX(4vw); }
 
-        /* Team Logo with Intro + Continuous Breathing Animation */
+        /* Team Logo with Continuous Breathing Animation */
         .team-logo { 
             width: 14vw; height: 14vw; object-fit: contain; filter: drop-shadow(0 2vw 2vw rgba(0,0,0,0.8)); 
             transform: scale(0.3) translateY(2vw); opacity: 0; 
             transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.3s, opacity 0.8s ease 0.3s;
         }
-        /* When animate-in class is added, the logo transitions first, then the keyframe takes over for continuous motion */
         #vs-screen.animate-in .team-logo { 
             transform: scale(1) translateY(0); opacity: 1; 
-            animation: breatheFlag 4s infinite alternate ease-in-out 1.2s; /* 1.2s delay allows intro transition to finish */
+            animation: breatheFlag 4s infinite alternate ease-in-out 1.2s; 
         }
 
         @keyframes breatheFlag { 
@@ -259,7 +257,7 @@
         <div class="vignette"></div>
         <div class="flash-effect" id="flash"></div>
 
-        <!-- 1. STADIUM SHOWCASE (NEW FOOTBALL IMAGES) -->
+        <!-- 1. STADIUM SHOWCASE -->
         <div id="stadium-view">
             <!-- Camera Angles -->
             <div class="stadium-cam pan-right" id="cam-1"></div>
@@ -320,8 +318,30 @@
     </div>
 
     <script>
+        // ==================================================
+        // FORCE FULLSCREEN LOGIC
+        // ==================================================
+        function enforceFullScreen() {
+            let docElm = document.documentElement;
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                if (docElm.requestFullscreen) {
+                    docElm.requestFullscreen().catch(err => console.log("Fullscreen strictly requires user interaction."));
+                } else if (docElm.webkitRequestFullscreen) { /* Safari */
+                    docElm.webkitRequestFullscreen();
+                }
+            }
+        }
+
         document.addEventListener("DOMContentLoaded", () => {
             
+            // Attempt fullscreen automatically on load
+            enforceFullScreen();
+            
+            // If browser blocks auto-fullscreen, any click or keypress will force it
+            window.addEventListener('click', enforceFullScreen);
+            window.addEventListener('keydown', enforceFullScreen);
+            window.addEventListener('touchstart', enforceFullScreen);
+
             // DOM Elements
             const cam1 = document.getElementById('cam-1');
             const cam2 = document.getElementById('cam-2');
@@ -410,3 +430,4 @@
     </script>
 </body>
 </html>
+
