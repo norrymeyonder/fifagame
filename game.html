@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GL SPORTS FIFA 2022 - Official World Cup Presentation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;800;900&family=Oswald:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* CSS Reset & World Cup Theme Variables */
+        :root {
+            --wc-maroon: #8A1538;
+            --wc-dark-maroon: #5c0d25;
+            --wc-gold: #EEB211;
+            --wc-light-gold: #FFD700;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+        body {
+            background-color: #000; display: flex; justify-content: center; align-items: center;
+            height: 100vh; font-family: 'Montserrat', sans-serif; overflow: hidden; color: #fff; margin: 0;
+        }
+
+        #game-container {
+            position: relative; width: 100vw; height: 56.25vw; max-height: 100vh; max-width: 177.77vh; 
+            background-color: #000; overflow: hidden; box-shadow: 0 0 5vw rgba(0,0,0,1);
+        }
+
+        /* Cinematic Effects */
+        .scanlines {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 90;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%);
+            background-size: 100% 4px; pointer-events: none; opacity: 0.35;
+        }
+        .vignette {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 85;
+            background: radial-gradient(circle at center, transparent 15%, rgba(0,0,0,0.95) 100%);
+            pointer-events: none;
+        }
+        
+        /* Premium Flash Transition */
+        .flash-effect {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: #fff; z-index: 999; opacity: 0; pointer-events: none; 
+            transition: opacity 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .flash-active { opacity: 1 !important; }
+
+        /* Final Black Overlay */
+        #final-black-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #000; z-index: 99999; opacity: 0; pointer-events: none;
+            transition: opacity 1s ease-in-out;
+        }
+        #final-black-screen.active { opacity: 1; pointer-events: all; }
+
+        /* ================= 1. STADIUM SHOWCASE (NEW FOOTBALL IMAGES) ================= */
+        #stadium-view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; }
+        
+        .stadium-cam {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover; background-position: center;
+            opacity: 0; filter: contrast(1.15) saturate(1.2) brightness(0.85);
+            transition: opacity 0.5s ease-in-out;
+        }
+        
+        /* New Authentic Football Stadium Images */
+        #cam-1 { background-image: url('https://images.unsplash.com/photo-1577223625816-7546f13df25d?q=80&w=2000&auto=format&fit=crop'); }
+        #cam-2 { background-image: url('https://images.unsplash.com/photo-1589487391730-58f20eb2c308?q=80&w=2000&auto=format&fit=crop'); }
+        #cam-3 { background-image: url('https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=2000&auto=format&fit=crop'); }
+        #cam-4 { background-image: url('https://images.unsplash.com/photo-1459865264687-595d652de67e?q=80&w=2000&auto=format&fit=crop'); }
+
+        .stadium-cam.active { opacity: 1; }
+        .pan-right { animation: panRight 4s linear forwards; }
+        .pan-left { animation: panLeft 4s linear forwards; }
+        .zoom-in { animation: zoomIn 4s linear forwards; }
+
+        @keyframes panRight { 0% { transform: scale(1.1) translateX(-2%); } 100% { transform: scale(1.1) translateX(2%); } }
+        @keyframes panLeft { 0% { transform: scale(1.15) translateX(2%); } 100% { transform: scale(1.15) translateX(-2%); } }
+        @keyframes zoomIn { 0% { transform: scale(1.0); } 100% { transform: scale(1.15); } }
+
+        /* World Cup Broadcast UI Overlay */
+        .broadcast-ui {
+            position: absolute; top: 2.5vw; left: 3vw; z-index: 15;
+            display: flex; align-items: center; gap: 1vw; opacity: 0; transition: opacity 0.5s ease;
+        }
+        .broadcast-ui.active { opacity: 1; }
+        .live-badge {
+            background: var(--wc-maroon); color: white; padding: 0.4vw 1vw; font-size: 1vw; font-weight: 900;
+            border-radius: 0.2vw; display: flex; align-items: center; gap: 0.5vw; letter-spacing: 2px;
+            box-shadow: 0 0 15px rgba(138, 21, 56, 0.8); border: 1px solid var(--wc-gold);
+        }
+        .live-dot { width: 0.6vw; height: 0.6vw; background: var(--wc-gold); border-radius: 50%; animation: blink 1s infinite; }
+        .broadcast-tag { font-family: 'Oswald', sans-serif; font-size: 1.2vw; font-weight: 500; letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.9); }
+        
+        .match-info-overlay {
+            position: absolute; bottom: 3vw; left: 3vw; z-index: 15;
+            background: linear-gradient(90deg, rgba(0,0,0,0.9) 0%, rgba(138, 21, 56, 0.6) 50%, rgba(0,0,0,0) 100%);
+            padding: 1vw 5vw 1vw 1.5vw; border-left: 0.4vw solid var(--wc-gold);
+            opacity: 0; transform: translateX(-2vw); transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1) 0.5s;
+        }
+        .match-info-overlay.active { opacity: 1; transform: translateX(0); }
+        .competition-name { font-size: 1vw; font-weight: 800; color: var(--wc-gold); letter-spacing: 4px; margin-bottom: 0.2vw; text-shadow: 0 0 10px rgba(0,0,0,1); }
+        .stadium-name { font-family: 'Oswald', sans-serif; font-size: 2.5vw; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; line-height: 1; text-shadow: 0 2px 5px rgba(0,0,0,1); }
+        @keyframes blink { 0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--wc-gold); } 50% { opacity: 0.3; box-shadow: none; } }
+
+        /* ================= 2. WORLD CUP 2022 VERSUS SCREEN ================= */
+        #vs-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20;
+            opacity: 0; visibility: hidden; transition: opacity 0.1s ease;
+            overflow: hidden; background: #000;
+        }
+        #vs-screen.active { opacity: 1; visibility: visible; }
+
+        /* World Cup Pattern Background */
+        .wc-pattern-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1;
+            background-image: 
+                linear-gradient(45deg, var(--wc-dark-maroon) 25%, transparent 25%, transparent 75%, var(--wc-dark-maroon) 75%, var(--wc-dark-maroon)), 
+                linear-gradient(45deg, var(--wc-dark-maroon) 25%, transparent 25%, transparent 75%, var(--wc-dark-maroon) 75%, var(--wc-dark-maroon));
+            background-color: var(--wc-maroon);
+            background-size: 4vw 4vw; background-position: 0 0, 2vw 2vw;
+            opacity: 0.6; pointer-events: none;
+        }
+
+        /* Slanted Team Panels */
+        .team-side {
+            position: absolute; top: 0; height: 100%; width: 55%;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); z-index: 2;
+        }
+        
+        .home-side { 
+            left: 0; background: linear-gradient(135deg, rgba(13, 56, 105, 0.95) 0%, rgba(67, 161, 213, 0.8) 100%);
+            clip-path: polygon(0 0, 100% 0, 80% 100%, 0 100%); 
+            transform: translateX(-100%); border-right: 0.2vw solid var(--wc-gold);
+        }
+        
+        .away-side { 
+            right: 0; background: linear-gradient(225deg, rgba(107, 12, 12, 0.95) 0%, rgba(228, 37, 24, 0.8) 100%);
+            clip-path: polygon(20% 0, 100% 0, 100% 100%, 0 100%); 
+            transform: translateX(100%); border-left: 0.2vw solid var(--wc-gold);
+        }
+        
+        #vs-screen.animate-in .home-side { transform: translateX(0); }
+        #vs-screen.animate-in .away-side { transform: translateX(0); }
+
+        /* Giant Watermark Logos (Continuously Animating) */
+        .bg-watermark {
+            position: absolute; width: 45vw; height: 45vw; opacity: 0.15; 
+            filter: grayscale(100%) brightness(2); z-index: 1; pointer-events: none;
+        }
+        /* Added infinite alternate animations for watermarks */
+        .home-side .bg-watermark { left: -8vw; top: -5vw; transform: rotate(-10deg); animation: floatWatermarkHome 12s infinite alternate ease-in-out; }
+        .away-side .bg-watermark { right: -8vw; bottom: -5vw; transform: rotate(10deg); animation: floatWatermarkAway 12s infinite alternate ease-in-out; }
+
+        @keyframes floatWatermarkHome { 0% { transform: rotate(-10deg) scale(1); } 100% { transform: rotate(-5deg) scale(1.1); } }
+        @keyframes floatWatermarkAway { 0% { transform: rotate(10deg) scale(1); } 100% { transform: rotate(5deg) scale(1.1); } }
+
+        /* Modern Team Content */
+        .team-content { z-index: 5; display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .home-side .team-content { transform: translateX(-4vw); } 
+        .away-side .team-content { transform: translateX(4vw); }
+
+        /* Team Logo with Intro + Continuous Breathing Animation */
+        .team-logo { 
+            width: 14vw; height: 14vw; object-fit: contain; filter: drop-shadow(0 2vw 2vw rgba(0,0,0,0.8)); 
+            transform: scale(0.3) translateY(2vw); opacity: 0; 
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.3s, opacity 0.8s ease 0.3s;
+        }
+        /* When animate-in class is added, the logo transitions first, then the keyframe takes over for continuous motion */
+        #vs-screen.animate-in .team-logo { 
+            transform: scale(1) translateY(0); opacity: 1; 
+            animation: breatheFlag 4s infinite alternate ease-in-out 1.2s; /* 1.2s delay allows intro transition to finish */
+        }
+
+        @keyframes breatheFlag { 
+            0% { transform: scale(1) translateY(0); filter: drop-shadow(0 2vw 2vw rgba(0,0,0,0.8)); } 
+            100% { transform: scale(1.05) translateY(-0.5vw); filter: drop-shadow(0 3vw 3vw rgba(0,0,0,0.95)); } 
+        }
+
+        .team-name { 
+            font-family: 'Oswald', sans-serif; font-size: 5vw; font-weight: 700; text-transform: uppercase; 
+            letter-spacing: 3px; text-shadow: 0 1vw 1.5vw rgba(0,0,0,1); color: #fff;
+            transform: translateY(2vw); opacity: 0; transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1) 0.5s; 
+            line-height: 1; margin-top: 1.5vw;
+        }
+        #vs-screen.animate-in .team-name { transform: translateY(0); opacity: 1; }
+
+        .team-stars { 
+            font-size: 1.5vw; color: var(--wc-light-gold); margin-top: 0.5vw; letter-spacing: 8px; 
+            text-shadow: 0 0 15px rgba(238, 178, 17, 1); opacity: 0; transform: translateY(1vw);
+            transition: all 0.6s ease 0.7s; 
+        }
+        #vs-screen.animate-in .team-stars { opacity: 1; transform: translateY(0); }
+
+        /* ================= 3. PREMIUM 3D GOLD CENTER BADGE (Continuously floating) ================= */
+        .vs-center-badge {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0) rotate(-45deg);
+            z-index: 30; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            width: 18vw; height: 18vw; border-radius: 50%;
+            background: rgba(138, 21, 56, 0.85); backdrop-filter: blur(20px);
+            border: 0.3vw solid var(--wc-gold); 
+            box-shadow: 0 2vw 4vw rgba(0,0,0,0.9), inset 0 0 3vw rgba(238,178,17,0.4), 0 0 2vw rgba(238,178,17,0.5);
+            opacity: 0; transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.6s;
+        }
+        #vs-screen.animate-in .vs-center-badge { 
+            transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; 
+            animation: pulseCenterBadge 5s infinite alternate ease-in-out 1.5s;
+        }
+
+        @keyframes pulseCenterBadge {
+            0% { box-shadow: 0 2vw 4vw rgba(0,0,0,0.9), inset 0 0 3vw rgba(238,178,17,0.4), 0 0 2vw rgba(238,178,17,0.5); }
+            100% { box-shadow: 0 3vw 6vw rgba(0,0,0,1), inset 0 0 5vw rgba(238,178,17,0.6), 0 0 4vw rgba(238,178,17,0.8); }
+        }
+
+        .fifa-center-logo {
+            width: 10vw; filter: drop-shadow(0 0 15px rgba(0, 0, 0, 1));
+            transform: translateY(1vw); opacity: 0;
+            transition: all 0.8s ease 1s;
+        }
+        #vs-screen.animate-in .fifa-center-logo { transform: translateY(0); opacity: 1; animation: floatLogo 3s infinite alternate ease-in-out 1.8s; }
+        
+        @keyframes floatLogo { 0% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3)); } 100% { transform: translateY(-0.5vw) scale(1.05); filter: drop-shadow(0 0 30px rgba(238, 178, 17, 0.8)); } }
+
+        .vs-text {
+            font-family: 'Oswald', sans-serif; font-size: 3vw; font-weight: 700; color: var(--wc-light-gold);
+            text-shadow: 0 0 10px rgba(238,178,17,0.8), 0 0 20px rgba(0,0,0,1); margin-top: 0.5vw;
+            opacity: 0; transform: scale(0.5); transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1) 1.2s;
+        }
+        #vs-screen.animate-in .vs-text { opacity: 1; transform: scale(1); }
+
+        /* Tournament Badge */
+        .tournament-badge {
+            position: absolute; bottom: 8vw; left: 50%; transform: translateX(-50%) translateY(2vw); z-index: 30;
+            background: linear-gradient(90deg, transparent, rgba(0,0,0,0.8), transparent);
+            padding: 0.5vw 4vw; border-top: 1px solid var(--wc-gold); border-bottom: 1px solid var(--wc-gold);
+            font-size: 1.2vw; font-weight: 800; letter-spacing: 6px; color: var(--wc-gold); text-transform: uppercase;
+            opacity: 0; transition: all 0.6s ease 1.4s; text-shadow: 0 0 10px rgba(0,0,0,1);
+        }
+        #vs-screen.animate-in .tournament-badge { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* Dynamic Connecting Text */
+        .connecting-text {
+            position: absolute; bottom: 3vw; left: 50%; transform: translateX(-50%); z-index: 40;
+            font-size: 0.85vw; font-weight: 800; letter-spacing: 4px; color: rgba(255,255,255,0.5);
+            opacity: 0; transition: opacity 1s ease 1.8s; text-transform: uppercase;
+        }
+        #vs-screen.animate-in .connecting-text { opacity: 1; animation: pulseText 1.5s infinite alternate 2.8s; }
+        @keyframes pulseText { 0% { color: rgba(255,255,255,0.5); text-shadow: none; } 100% { color: var(--wc-gold); text-shadow: 0 0 10px var(--wc-gold); } }
+
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <!-- Persistent Overlays -->
+        <div class="ui-grid"></div>
+        <div class="scanlines"></div>
+        <div class="vignette"></div>
+        <div class="flash-effect" id="flash"></div>
+
+        <!-- 1. STADIUM SHOWCASE (NEW FOOTBALL IMAGES) -->
+        <div id="stadium-view">
+            <!-- Camera Angles -->
+            <div class="stadium-cam pan-right" id="cam-1"></div>
+            <div class="stadium-cam pan-left" id="cam-2"></div>
+            <div class="stadium-cam zoom-in" id="cam-3"></div>
+            <div class="stadium-cam pan-right" id="cam-4"></div>
+
+            <!-- Broadcast UI -->
+            <div class="broadcast-ui" id="broadcast-ui">
+                <div class="live-badge"><div class="live-dot"></div> LIVE</div>
+                <div class="broadcast-tag">WORLD CUP BROADCAST</div>
+            </div>
+
+            <div class="match-info-overlay" id="stadium-info">
+                <div class="competition-name">THE GRAND FINAL</div>
+                <div class="stadium-name">LUSAIL STADIUM</div>
+            </div>
+        </div>
+
+        <!-- 2. WORLD CUP 2022 VERSUS SCREEN -->
+        <div id="vs-screen">
+            <div class="wc-pattern-bg"></div>
+            
+            <!-- Left: Argentina Side -->
+            <div class="team-side home-side">
+                <img src="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/4.1.4/flags/4x3/ar.svg" class="bg-watermark" alt="AR Watermark">
+                <div class="team-content">
+                    <img src="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/4.1.4/flags/4x3/ar.svg" class="team-logo" alt="Argentina">
+                    <div class="team-name">Argentina</div>
+                    <div class="team-stars">★★★★★</div>
+                </div>
+            </div>
+
+            <!-- Right: Portugal Side -->
+            <div class="team-side away-side">
+                <img src="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/4.1.4/flags/4x3/pt.svg" class="bg-watermark" alt="PT Watermark">
+                <div class="team-content">
+                    <img src="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/4.1.4/flags/4x3/pt.svg" class="team-logo" alt="Portugal">
+                    <div class="team-name">Portugal</div>
+                    <div class="team-stars">★★★★★</div>
+                </div>
+            </div>
+
+            <!-- Center Gold Badge -->
+            <div class="vs-center-badge">
+                <img src="https://norrymeyonder.github.io/fifagame/fifa_logo.png" class="fifa-center-logo" alt="FIFA Logo">
+                <div class="vs-text">VS</div>
+            </div>
+
+            <!-- Bottom Texts -->
+            <div class="tournament-badge">FIFA World Cup Qatar 2022™</div>
+            <div class="connecting-text" id="status-text">INITIALIZING MATCH ENGINE...</div>
+        </div>
+
+        <!-- FINAL BLACK SCREEN OVERLAY -->
+        <div id="final-black-screen"></div>
+
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            
+            // DOM Elements
+            const cam1 = document.getElementById('cam-1');
+            const cam2 = document.getElementById('cam-2');
+            const cam3 = document.getElementById('cam-3');
+            const cam4 = document.getElementById('cam-4');
+            const broadcastUi = document.getElementById('broadcast-ui');
+            const stadiumInfo = document.getElementById('stadium-info');
+            
+            const flash = document.getElementById('flash');
+            const vsScreen = document.getElementById('vs-screen');
+            const finalBlackScreen = document.getElementById('final-black-screen');
+            const statusText = document.getElementById('status-text');
+
+            // --- Sequence Timings (Broadcast Style) ---
+            
+            // 0.0s: Show Cam 1 + UI Texts
+            cam1.classList.add('active');
+            setTimeout(() => { 
+                broadcastUi.classList.add('active');
+                stadiumInfo.classList.add('active'); 
+            }, 500);
+
+            // 1.5s: Switch to Cam 2
+            setTimeout(() => {
+                cam1.classList.remove('active');
+                cam2.classList.add('active');
+            }, 1500);
+
+            // 3.0s: Switch to Cam 3
+            setTimeout(() => {
+                cam2.classList.remove('active');
+                cam3.classList.add('active');
+            }, 3000);
+
+            // 4.5s: Switch to Cam 4 (Close up) & Hide UI
+            setTimeout(() => {
+                cam3.classList.remove('active');
+                cam4.classList.add('active');
+                broadcastUi.classList.remove('active');
+                stadiumInfo.classList.remove('active'); 
+            }, 4500);
+
+            // 5.5s: Cinematic Flash & Transition to VS Screen
+            setTimeout(() => {
+                // Trigger Intense Flash
+                flash.classList.add('flash-active');
+                
+                // Switch scenes exactly at the peak of the flash (approx 200ms)
+                setTimeout(() => {
+                    document.getElementById('stadium-view').style.display = 'none'; // Remove Stadium
+                    vsScreen.classList.add('active'); // Make VS Screen visible
+                    
+                    // Force reflow and add animation class
+                    setTimeout(() => {
+                        vsScreen.classList.add('animate-in');
+                        
+                        // Fade out the flash slowly to reveal the VS Screen
+                        flash.classList.remove('flash-active');
+
+                        // ==========================================
+                        // RANDOM LOADING TIME LOGIC (10s to 20s)
+                        // ==========================================
+                        
+                        // Generate random delay between 10000ms (10s) and 20000ms (20s)
+                        const randomLoadTime = Math.floor(Math.random() * (20000 - 10000 + 1)) + 10000;
+                        console.log("Match will load for: " + (randomLoadTime / 1000) + " seconds.");
+
+                        // After the random time passes, fade to black
+                        setTimeout(() => {
+                            statusText.innerText = "MATCH READY...";
+                            
+                            setTimeout(() => {
+                                // Trigger the final black screen fade
+                                finalBlackScreen.classList.add('active');
+                            }, 800);
+
+                        }, randomLoadTime);
+
+                    }, 50);
+
+                }, 200);
+
+            }, 5500);
+
+        });
+    </script>
+</body>
+</html>
